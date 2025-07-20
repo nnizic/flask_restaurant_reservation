@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="hr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin - Rezervacije</title>
+  </head>
+  <body>
+    <h1>Pregled svih rezervacija</h1>
+
+    {% if reservations %}
+    <table border="1" cellpadding="8">
+      <thead>
+        <tr>
+          <th>Ime</th>
+          <th>Stol</th>
+          <th>Datum i vrijeme</th>
+          <th>Kreirano</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reservations %}
+        <tr>
+          <td>{{ r.name }}</td>
+          <td>#{{ r.table.number }}</td>
+          <td>{{ r.date.strftime('%d.%m.%Y %H:%M') }}</td>
+          <td>{{ r.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>Nema rezervacija.</p>
+    {% endif %}
+
+    <p><a href="{{ url_for('index') }}">Natrag na početnu</a></p>
+  </body>
+</html>

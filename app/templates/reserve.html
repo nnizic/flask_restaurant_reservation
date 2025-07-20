@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="hr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Rezervacija stola</title>
+  </head>
+  <body>
+    <h1>Rezervacija stola #{{ table.number }}</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <ul>
+      {% for category, message in messages %}
+      <li
+        style="color: {% if category == 'success' %}green{% else %}red{% endif %};"
+      >
+        {{ message }}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %} {% endwith %}
+
+    <form method="POST">
+      <label for="name">Vaše ime:</label><br />
+      <input type="text" id="name" name="name" required /><br /><br />
+
+      <label for="date">Datum i vrijeme:</label><br />
+      <input type="datetime-local" id="date" name="date" required /><br /><br />
+
+      <button type="submit">Rezerviraj</button>
+    </form>
+
+    <p><a href="{{ url_for('index') }}">Natrag</a></p>
+  </body>
+</html>
