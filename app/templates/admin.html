@@ -52,6 +52,44 @@
     {% else %}
     <p>Nema rezervacija.</p>
     {% endif %}
+    <h2>Dodaj novi stol</h2>
+    <form method="POST" action="{{url_for('add_table')}}">
+      <label for="number">Broj stola:</label>
+      <input type="number" name="number" required />
+      <label for="capacity">Kapacitet:</label>
+      <input type="number" name="capacity" required />
+      <button type="submit">Dodaj</button>
+    </form>
+    <h2>Postojeći stolovi</h2>
+    <table border="1" cellpadding="6">
+      <thead>
+        <tr>
+          <th>Broj</th>
+          <th>Kapacitet</th>
+          <th>Akcija</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tables %}
+        <tr>
+          <td>{{ t.number }}</td>
+          <td>{{ t.capacity }}</td>
+          <td>
+            <form
+              method="POST"
+              action="{{ url_for('delete_table', table_id=t.id) }}"
+              style="display: inline"
+            >
+              <button type="submit" onclick="return confirm('Obrisati stol?')">
+                Obriši
+              </button>
+            </form>
+          </td>
+        </tr>
+
+        {% endfor %}
+      </tbody>
+    </table>
 
     <p><a href="{{ url_for('index') }}">Natrag na početnu</a></p>
   </body>

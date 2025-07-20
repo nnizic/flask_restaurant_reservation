@@ -36,7 +36,8 @@ def reserve(table_id):
 @app.route("/admin")
 def admin():
     reservations = Reservation.query.order_by(Reservation.date.desc()).all()
-    return render_template("admin.html", reservations=reservations)
+    tables = Table.query.order_by(Table.number).all()
+    return render_template("admin.html", reservations=reservations, tables=tables)
 
 
 @app.route("/admin/confirm/<int:reservation_id>", methods=["POST"])
@@ -54,4 +55,37 @@ def delete_reservation(reservation_id):
     db.session.delete(reservation)
     db.session.commit()
     flash("Rezervacija obrisana.", "danger")
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/add_table", methods=["POST"])
+def add_table():
+    number = request.form.get("number")
+    capacity = request.form.get("capacity")
+
+    if not number or not capacity:
+        flash("Broj i kapacitet su obavezni.", "danger")
+        return redirect(url_for("admin"))
+
+    if Table.query.filter_by(number=number).first():
+        flash("Stol s tim brojem već postoji", "danger")
+        return redirect(url_for("admin"))
+
+    new_table = Table(number=number, capacity=capacity)
+    db.session.add(new_table)
+    db.session.commit()
+    flash("Stol dodan.", "success")
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/delete_-table/<int:table_id>", methods=["POST"])
+def delete_table(table_id):
+    table = Table.query.get_or_404(table_id)
+    if table.reservations:
+        flash("Stol ne može biti obrisan jer ima rezervacije.", "danger")
+        return redirect(url_for("admin"))
+
+    db.session.delete(table)
+    db.session.commit()
+    flash("Stol obrisan.", "success")
     return redirect(url_for("admin"))
