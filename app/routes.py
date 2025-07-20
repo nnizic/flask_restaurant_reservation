@@ -37,3 +37,21 @@ def reserve(table_id):
 def admin():
     reservations = Reservation.query.order_by(Reservation.date.desc()).all()
     return render_template("admin.html", reservations=reservations)
+
+
+@app.route("/admin/confirm/<int:reservation_id>", methods=["POST"])
+def confirm_reservation(reservation_id):
+    reservation = Reservation.query.get_or_404(reservation_id)
+    reservation.status = "confirmed"
+    db.session.commit()
+    flash("Rezervacija potvrđena.", "success")
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/delete/<int:reservation_id>", methods=["POST"])
+def delete_reservation(reservation_id):
+    reservation = Reservation.query.get_or_404(reservation_id)
+    db.session.delete(reservation)
+    db.session.commit()
+    flash("Rezervacija obrisana.", "danger")
+    return redirect(url_for("admin"))

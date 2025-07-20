@@ -24,6 +24,27 @@
           <td>#{{ r.table.number }}</td>
           <td>{{ r.date.strftime('%d.%m.%Y %H:%M') }}</td>
           <td>{{ r.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+          <td>{{ r.status }}</td>
+          <td>
+            {% if r.status == 'pending' %}
+            <form
+              method="POST"
+              action="{{ url_for('confirm_reservation', reservation_id=r.id) }}"
+              style="display: inline"
+            >
+              <button type="submit">Potvrdi</button>
+            </form>
+            {% endif %}
+            <form
+              method="POST"
+              action="{{ url_for('delete_reservation', reservation_id=r.id) }}"
+              style="display: inline"
+            >
+              <button type="submit" onclick="return confirm('Jesi siguran?')">
+                Obriši
+              </button>
+            </form>
+          </td>
         </tr>
         {% endfor %}
       </tbody>

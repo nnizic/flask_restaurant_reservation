@@ -18,3 +18,4 @@ class Reservation(db.Model):
     date = db.Column(db.DateTime, nullable=False)
     table_id = db.Column(db.Integer, db.ForeignKey("table.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default="pending")
