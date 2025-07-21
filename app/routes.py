@@ -1,10 +1,11 @@
 # routes.py
 
-from datetime import datetime
+from datetime import date, datetime
 
 from flask import flash, redirect, render_template, request, url_for
 from flask import current_app as app
 from flask_mail import Message
+from sqlalchemy import and_, func
 
 from . import db
 from . import mail
@@ -52,9 +53,34 @@ def reserve(table_id):
 
 @app.route("/admin")
 def admin():
+    status_filter = request.args.get("status")
+    date_filter = request.args.get("date")
+
+    query = Reservation.query
+
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+
+    if date_filter:
+        try:
+            parsed_date = datetime.strptime(date_filter, "%Y-%m-%d").date()
+            query = query.filter(func.date(Reservation.date) == parsed_date)
+        except ValueError:
+            flash("Neispravan format datuma", "danger")
+
     reservations = Reservation.query.order_by(Reservation.date.desc()).all()
     tables = Table.query.order_by(Table.number).all()
-    return render_template("admin.html", reservations=reservations, tables=tables)
+
+    # Statistika
+    total = Reservation.query.count()
+    confirmed = Reservation.query.filter_by(status="confirmed").count()
+    pending = Reservation.query.filter_by(status="pending").count()
+    rejected = Reservation.query.filter_by(status="rejected").count()
+    today = Reservation.query.filter(func.date(Reservation.date) == date.today()).count()
+
+    stats = {"total": total, "confirmed": confirmed, "pending": pending, "rejected": rejected, "today": today}
+
+    return render_template("admin.html", reservations=reservations, tables=tables, stats=stats)
 
 
 @app.route("/admin/confirm/<int:reservation_id>", methods=["POST"])

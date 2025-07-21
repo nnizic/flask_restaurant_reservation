@@ -1,96 +1,136 @@
 <!DOCTYPE html>
 <html lang="hr">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Admin - Rezervacije</title>
-  </head>
-  <body>
-    <h1>Pregled svih rezervacija</h1>
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container py-4">
 
-    {% if reservations %}
-    <table border="1" cellpadding="8">
-      <thead>
-        <tr>
-          <th>Ime</th>
-          <th>Stol</th>
-          <th>Datum i vrijeme</th>
-          <th>Kreirano</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in reservations %}
-        <tr>
-          <td>{{ r.name }}</td>
-          <td>#{{ r.table.number }}</td>
-          <td>{{ r.date.strftime('%d.%m.%Y %H:%M') }}</td>
-          <td>{{ r.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
-          <td>{{ r.status }}</td>
-          <td>
-            {% if r.status == 'pending' %}
-            <form
-              method="POST"
-              action="{{ url_for('confirm_reservation', reservation_id=r.id) }}"
-              style="display: inline"
-            >
-              <button type="submit">Potvrdi</button>
-            </form>
-            {% endif %}
-            <form
-              method="POST"
-              action="{{ url_for('delete_reservation', reservation_id=r.id) }}"
-              style="display: inline"
-            >
-              <button type="submit" onclick="return confirm('Jesi siguran?')">
-                Obriši
-              </button>
-            </form>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <p>Nema rezervacija.</p>
+  <h1 class="mb-4">Admin Dashboard</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+      {% endfor %}
     {% endif %}
-    <h2>Dodaj novi stol</h2>
-    <form method="POST" action="{{url_for('add_table')}}">
-      <label for="number">Broj stola:</label>
-      <input type="number" name="number" required />
-      <label for="capacity">Kapacitet:</label>
-      <input type="number" name="capacity" required />
-      <button type="submit">Dodaj</button>
-    </form>
-    <h2>Postojeći stolovi</h2>
-    <table border="1" cellpadding="6">
-      <thead>
-        <tr>
-          <th>Broj</th>
-          <th>Kapacitet</th>
-          <th>Akcija</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for t in tables %}
-        <tr>
-          <td>{{ t.number }}</td>
-          <td>{{ t.capacity }}</td>
-          <td>
-            <form
-              method="POST"
-              action="{{ url_for('delete_table', table_id=t.id) }}"
-              style="display: inline"
-            >
-              <button type="submit" onclick="return confirm('Obrisati stol?')">
-                Obriši
-              </button>
-            </form>
-          </td>
-        </tr>
+  {% endwith %}
 
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- 📊 Statistika -->
+  <div class="row mb-4">
+    <div class="col-md-2"><div class="card text-bg-primary"><div class="card-body">Ukupno: {{ stats.total }}</div></div></div>
+    <div class="col-md-2"><div class="card text-bg-success"><div class="card-body">Potvrđene: {{ stats.confirmed }}</div></div></div>
+    <div class="col-md-2"><div class="card text-bg-warning"><div class="card-body">Na čekanju: {{ stats.pending }}</div></div></div>
+    <div class="col-md-2"><div class="card text-bg-danger"><div class="card-body">Odbijene: {{ stats.rejected }}</div></div></div>
+    <div class="col-md-2"><div class="card text-bg-info"><div class="card-body">Danas: {{ stats.today }}</div></div></div>
+  </div>
 
-    <p><a href="{{ url_for('index') }}">Natrag na početnu</a></p>
-  </body>
+  <!-- 🔍 Filteri -->
+  <form method="get" class="row g-3 mb-4">
+    <div class="col-auto">
+      <select name="status" class="form-select">
+        <option value="">-- Status --</option>
+        <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Na čekanju</option>
+        <option value="confirmed" {% if request.args.get('status') == 'confirmed' %}selected{% endif %}>Potvrđene</option>
+        <option value="rejected" {% if request.args.get('status') == 'rejected' %}selected{% endif %}>Odbijene</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <input type="date" name="date" class="form-control" value="{{ request.args.get('date', '') }}">
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Filtriraj</button>
+      <a href="{{ url_for('admin') }}" class="btn btn-secondary">Poništi</a>
+    </div>
+  </form>
+
+  <!-- 📋 Rezervacije -->
+  <h3>Rezervacije</h3>
+  <table class="table table-bordered table-striped">
+    <thead class="table-dark">
+      <tr>
+        <th>ID</th>
+        <th>Ime</th>
+        <th>Email</th>
+        <th>Stol</th>
+        <th>Datum</th>
+        <th>Status</th>
+        <th>Akcije</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in reservations %}
+      <tr>
+        <td>{{ r.id }}</td>
+        <td>{{ r.name }}</td>
+        <td>{{ r.email }}</td>
+        <td>{{ r.table.number }}</td>
+        <td>{{ r.date.strftime('%d.%m.%Y. %H:%M') }}</td>
+        <td>
+          {% if r.status == 'pending' %}
+            <span class="badge text-bg-warning">Na čekanju</span>
+          {% elif r.status == 'confirmed' %}
+            <span class="badge text-bg-success">Potvrđena</span>
+          {% else %}
+            <span class="badge text-bg-danger">Odbijena</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if r.status == 'pending' %}
+            <a href="{{ url_for('confirm_reservation', reservation_id=r.id) }}" class="btn btn-sm btn-success">Potvrdi</a>
+            <a href="{{ url_for('reject_reservation', reservation_id=r.id) }}" class="btn btn-sm btn-warning">Odbij</a>
+          {% endif %}
+          <a href="{{ url_for('delete_reservation', reservation_id=r.id) }}" class="btn btn-sm btn-danger">Obriši</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- 🪑 Stolovi -->
+  <hr>
+  <h3>Stolovi</h3>
+  <table class="table table-bordered">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Broj</th>
+        <th>Kapacitet</th>
+        <th>Akcija</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tables %}
+      <tr>
+        <td>{{ t.id }}</td>
+        <td>{{ t.number }}</td>
+        <td>{{ t.capacity }}</td>
+        <td>
+          <a href="{{ url_for('delete_table', table_id=t.id) }}" class="btn btn-sm btn-danger">Obriši</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- ➕ Dodavanje stola -->
+  <form method="POST" action="{{ url_for('add_table') }}" class="row g-3 mt-3">
+    <div class="col-auto">
+      <input type="number" name="number" class="form-control" placeholder="Broj stola" required>
+    </div>
+    <div class="col-auto">
+      <input type="number" name="capacity" class="form-control" placeholder="Kapacitet" required>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary">Dodaj stol</button>
+    </div>
+  </form>
+
+  <div class="mt-5">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Natrag na početnu</a>
+  </div>
+
+</body>
 </html>
+
