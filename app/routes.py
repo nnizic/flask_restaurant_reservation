@@ -4,8 +4,10 @@ from datetime import datetime
 
 from flask import flash, redirect, render_template, request, url_for
 from flask import current_app as app
+from flask_mail import Message
 
 from . import db
+from . import mail
 from .models import Reservation, Table
 
 
@@ -20,15 +22,30 @@ def reserve(table_id):
     table = Table.query.get_or_404(table_id)
     if request.method == "POST":
         name = request.form["name"]
+        email = request.form["email"]
         date = datetime.strptime(request.form["date"], "%Y-%m-%dT%H:%M")
         existing = Reservation.query.filter_by(table_id=table.id, date=date).first()
         if existing:
             flash("Rezervacija već postoji za taj datum i vrijeme.", "danger")
             return redirect(url_for("reserve", table_id=table.id))
-        reservation = Reservation(name=name, date=date, table_id=table.id)
+        reservation = Reservation(name=name, email=email, date=date, table_id=table.id)
         db.session.add(reservation)
         db.session.commit()
-        flash("Rezervacija uspješna!", "success")
+
+        # pošalji adminu mail
+        msg = Message(f"Nova rezervacija: {name}", recipients=["project.virtualis@gmail.com"])
+        msg.body = f"""Nova rezervacija:
+        Ime: {name}
+        Stol: #{table.number}
+        Datum: {date.strftime('%d.%m.%Y %H:%M')}
+
+        Potvrdi ili odbij:
+        http://localhost:5000/admin/confirm_email/{reservation.id}
+        http://localhost:5000/admin/reject_email/{reservation.id}
+        """
+        mail.send(msg)
+
+        flash("Rezervacija zatražena Čekajte potvrdu.!", "success")
         return redirect(url_for("index"))
     return render_template("reserve.html", table=table)
 
@@ -89,3 +106,50 @@ def delete_table(table_id):
     db.session.commit()
     flash("Stol obrisan.", "success")
     return redirect(url_for("admin"))
+
+
+# rute za potvrdu i odbijanje rezervacije putem mail-as
+@app.route("/admin/confirm_email/<int:reservation_id>")
+def confirm_email(reservation_id):
+    reservation = Reservation.query.get_or_404(reservation_id)
+    if reservation.status != "pending":
+        return "Rezervacija je već obrađena!"
+
+    reservation.status = "confirmed"
+    db.session.commit()
+
+    send_user_notification(reservation, accepted=True)
+    return "Rezervacije potvrđena. Korisnik obaviješten."
+
+
+@app.route("/admin/reject_email/<int:reservation_id>")
+def reject_email(reservation_id):
+    reservation = Reservation.query.get_or_404(reservation_id)
+    if reservation.status != "rejected":
+        return "Rezervacija je već obrađena."
+
+    reservation.status = "rejected"
+    db.session.commit()
+
+    send_user_notification(reservation, accepted=False)
+    return "Rezervacija je odbijena. Korisnik je obaviješten."
+
+
+def send_user_notification(reservation, accepted=True):
+    """funkcija za slanje maila korisniku"""
+    msg = Message("Status vaše rezervacije", recipients=[f"{reservation.email}"])
+    status = "potvrđena" if accepted else "odbijena"
+    msg.body = f"""
+    Poštovani {reservation.name},
+
+    Vaša rezervacija je {status}.
+
+
+    Detalji:
+    Stol: #{reservation.table.number}
+    Datum: {reservation.date.strftime('%d.%m.%Y %H:%M')}
+
+    Hvala što koristite naš sustav.
+    """
+
+    mail.send(msg)
