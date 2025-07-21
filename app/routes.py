@@ -44,6 +44,29 @@ def reserve(table_id):
         http://localhost:5000/admin/confirm_email/{reservation.id}
         http://localhost:5000/admin/reject_email/{reservation.id}
         """
+
+        # HTML verzija s botunima
+        msg.html = f"""
+        <p><strong>Nova rezervacija</strong></p>
+        <ul>
+          <li>Ime: {name}</li>
+          <li>Stol: #{table.number}</li>
+          <li>Datum: {date.strftime('%d.%m.%Y %H:%M')}</li>
+        </ul>
+        
+        <p>Odaberi što želiš napraviti:</p>
+        
+        <a href="http://localhost:5000/admin/confirm_email/{reservation.id}"
+           style="display:inline-block; padding:10px 20px; background-color:#28a745; color:white; text-decoration:none; border-radius:5px;">
+           ✅ Potvrdi
+        </a>
+        
+        <a href="http://localhost:5000/admin/reject_email/{reservation.id}"
+           style="display:inline-block; padding:10px 20px; background-color:#dc3545; color:white; text-decoration:none; border-radius:5px; margin-left:10px;">
+           ❌ Odbij
+        </a>
+        """
+
         mail.send(msg)
 
         flash("Rezervacija zatražena Čekajte potvrdu.!", "success")
@@ -65,10 +88,11 @@ def admin():
         try:
             parsed_date = datetime.strptime(date_filter, "%Y-%m-%d").date()
             query = query.filter(func.date(Reservation.date) == parsed_date)
+            print("Filter po datumu:", parsed_date)
         except ValueError:
             flash("Neispravan format datuma", "danger")
 
-    reservations = Reservation.query.order_by(Reservation.date.desc()).all()
+    reservations = query.order_by(Reservation.date.desc()).all()
     tables = Table.query.order_by(Table.number).all()
 
     # Statistika
