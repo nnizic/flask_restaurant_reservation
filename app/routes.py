@@ -4,12 +4,13 @@ from datetime import date, datetime
 
 from flask import flash, redirect, render_template, request, url_for
 from flask import current_app as app
+from flask_login import current_user, login_required, login_user, logout_user
 from flask_mail import Message
 from sqlalchemy import and_, func
 
 from . import db
 from . import mail
-from .models import Reservation, Table
+from .models import Admin, Reservation, Table
 
 
 @app.route("/")
@@ -75,6 +76,7 @@ def reserve(table_id):
 
 
 @app.route("/admin")
+@login_required
 def admin():
     status_filter = request.args.get("status")
     date_filter = request.args.get("date")
@@ -203,3 +205,26 @@ def send_user_notification(reservation, accepted=True):
     """
 
     mail.send(msg)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+        admin = Admin.query.filter_by(username=username).first()
+        if admin and admin.check_password(password):
+            login_user(admin)
+            flash("Uspješna prijava!", "success")
+            return redirect(url_for("admin"))
+        else:
+            flash("Neispravno korisničko ime ili lozinka", "danger")
+    return render_template("login.html")
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash("Odjavljen si", "info")
+    return redirect(url_for("login"))

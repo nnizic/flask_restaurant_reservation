@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_login import LoginManager
 from flask_mail import Mail
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -12,6 +13,9 @@ migrate = Migrate()
 # mail objekt
 mail = Mail()
 
+# logiranje admina
+login_manager = LoginManager()
+
 
 # inicijalizacija aplikacije
 def create_app():
@@ -21,9 +25,16 @@ def create_app():
     migrate.init_app(app, db)
     mail.init_app(app)
 
+    login_manager.init_app(app)
+
+    login_manager.login_view = "login"  # ako nije prijavljen ide tu
+
     with app.app_context():
         from . import routes, models
+        from .models import Admin
 
-        db.create_all()
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Admin.query.get(int(user_id))
 
     return app
