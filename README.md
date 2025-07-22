@@ -8,8 +8,17 @@ Jednostavni web sustav za rezervaciju stolova u restoranu, izrađen pomoću **Fl
 
 - Prikaz dostupnih stolova
 - Rezervacija stola na određeni datum i vrijeme
-- Pregled svih rezervacija (admin sučelje)
 - Validacija dvostrukih rezervacija
+- Admin sučelje s:
+  - pregledom i filtriranjem rezervacija (po statusu i datumu)
+  - potvrdom i odbijanjem rezervacija (i preko emaila)
+  - statistikama (ukupno, danas, potvrđene, na čekanju, odbijene)
+  - upravljanjem stolovima (dodavanje i brisanje)
+- Email obavijesti:
+  - Admin prima mail s botunima za potvrdu/odbijanje rezervacije
+  - Korisnik prima mail s informacijom o statusu rezervacije (potvrđeno/odbijeno)
+- Admin autentikacija (login/logout)
+- Bootstrap dizajn za sve stranice
 
 ---
 
@@ -19,18 +28,20 @@ Jednostavni web sustav za rezervaciju stolova u restoranu, izrađen pomoću **Fl
 restaurant-reservation/
 ├── app/
 │ ├── init.py # Inicijalizacija aplikacije i baze
-│ ├── models.py # SQLAlchemy modeli za stolove i rezervacije
+│ ├── models.py # SQLAlchemy modeli za stolove, rezervacije i admina
 │ ├── routes.py # Flask rute (view funkcije)
+│ ├── email_utils.py # Slanje emailova adminu i korisnicima
 │ └── templates/ # HTML predlošci
-│ ├── index.html # Početna stranica - dostupni stolovi
-│ ├── reserve.html # Forma za rezervaciju
-│ └── admin.html # Pregled rezervacija (admin panel)
+│ ├── base.html
+│ ├── index.html
+│ ├── reserve.html
+│ ├── admin.html
+│ └── login.html
 ├── static/ # (opcionalno) CSS/JS datoteke
 ├── config.py # Konfiguracija aplikacije (baza, ključ itd.)
 ├── run.py # Pokretanje aplikacije
 ├── requirements.txt # Python ovisnosti
 └── README.md # Dokumentacija projekta
-
 ```
 
 ---
@@ -43,48 +54,82 @@ restaurant-reservation/
    pip install -r requirements.txt
    ```
 
-2. Konfiguriraj `config.py`:
+   Konfiguriraj config.py:
 
-   ```python
-   SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://user:lozinka@localhost/restaurant'
-   ```
+```
 
-3. Kreiraj bazu u MySQL-u:
+SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://user:lozinka@localhost/restaurant'
+SECRET_KEY = 'tvoj_tajni_kljuc'
+MAIL_SERVER = 'smtp.gmail.com'
+MAIL_PORT = 587
+MAIL_USE_TLS = True
+MAIL_USERNAME = 'tvoj.email@gmail.com'
+MAIL_PASSWORD = 'tvoja_app_lozinka'
 
-   ```sql
-   CREATE DATABASE restaurant;
-   ```
+```
 
-4. Pokreni aplikaciju:
+Kreiraj bazu u MySQL-u:
 
-   ```bash
-   python run.py
-   ```
+```
+CREATE DATABASE restaurant;
 
-5. Otvori u pregledniku:
-   ```
-   http://127.0.0.1:5000/
-   ```
+Inicijaliziraj migraciju baze (ako koristiš Flask-Migrate):
 
----
+flask db init
+flask db migrate
+flask db upgrade
+```
 
-## 🧪 Primjedbe
+Pokreni aplikaciju:
 
-- Početna stranica prikazuje sve stolove i omogućuje rezervaciju.
-- Admin panel prikazuje sve rezervacije.
-- Aplikacija ne uključuje autentifikaciju – može se nadograditi po potrebi.
+```
+python run.py
+```
 
----
+Otvori u pregledniku:
 
-## 📌 Ovisnosti
+http://127.0.0.1:5000/
 
-- Flask
-- Flask-SQLAlchemy
-- Flask-Migrate (opcionalno)
-- PyMySQL
+🔐 Admin prijava
 
----
+Dodaj ručno admin korisnika u bazu (ili kroz skriptu):
 
-## 📬 Kontakt
+```
+from app import db
+from app.models import AdminUser
+admin = AdminUser(username='admin', password_hash=generate_password_hash('lozinka'))
+db.session.add(admin)
+db.session.commit()
+```
 
-Za pitanja ili proširenja slobodno se javi! 🙂
+📌 Ovisnosti
+
+Flask
+
+Flask-SQLAlchemy
+
+Flask-Migrate
+
+Flask-Mail
+
+Flask-Login
+
+PyMySQL
+
+Bootstrap 5 (CDN)
+
+🧪 Primjedbe
+
+Za slanje emailova s Gmailom koristi se "App Password" ako je uključena 2FA.
+
+Aplikacija trenutno koristi osnovnu zaštitu – za produkciju preporučujemo .env, SSL i CSRF zaštitu.
+
+Razgraničeni pristup korisnika i admina može se dodatno proširiti (npr. korisnički paneli).
+
+📬 Kontakt
+
+Za pitanja, prijedloge ili proširenja slobodno se javi! 🙂
+
+```
+
+```
