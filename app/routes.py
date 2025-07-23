@@ -35,7 +35,8 @@ def reserve(table_id):
         db.session.commit()
 
         # pošalji adminu mail
-        msg = Message(f"Nova rezervacija: {name}", recipients=["project.virtualis@gmail.com"])
+        admin_email = app.config.get("MAIL_DEFAULT_SENEDER")
+        msg = Message(f"Nova rezervacija: {name}", recipients=[admin_email])
         msg.body = f"""Nova rezervacija:
         Ime: {name}
         Stol: #{table.number}
