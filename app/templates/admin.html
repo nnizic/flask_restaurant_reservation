@@ -72,8 +72,9 @@
           <a href="{{ url_for('confirm_email', reservation_id=res.id) }}" class="btn btn-sm btn-success">✅</a>
           <a href="{{ url_for('reject_email', reservation_id=res.id) }}" class="btn btn-sm btn-danger">❌</a>
         {% endif %}
-        <a href="{{ url_for('delete_reservation', reservation_id=res.id) }}" class="btn btn-sm btn-outline-danger"
-           onclick="return confirm('Sigurno želiš obrisati ovu rezervaciju?')">🗑</a>
+        <form action="{{ url_for('delete_reservation', reservation_id=res.id) }}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Sigurno želiš obrisati ovu rezervaciju?')">🗑</button>
+        </form>
       </td>
     </tr>
     {% endfor %}

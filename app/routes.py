@@ -35,7 +35,9 @@ def reserve(table_id):
         db.session.commit()
 
         # pošalji adminu mail
-        admin_email = app.config.get("MAIL_DEFAULT_SENEDER")
+        admin_email = app.config.get("MAIL_DEFAULT_SENDER")
+        if not admin_email:
+            raise ValueError("Email za slanje nije postavljen u konfiguraciji!")
         msg = Message(f"Nova rezervacija: {name}", recipients=[admin_email])
         msg.body = f"""Nova rezervacija:
         Ime: {name}
@@ -168,26 +170,30 @@ def delete_table(table_id):
 def confirm_email(reservation_id):
     reservation = Reservation.query.get_or_404(reservation_id)
     if reservation.status != "pending":
-        return "Rezervacija je već obrađena!"
+        flash("Rezervacija je već obrađena!", "warning")
+        return redirect(url_for("admin"))
 
     reservation.status = "confirmed"
     db.session.commit()
 
     send_user_notification(reservation, accepted=True)
-    return "Rezervacije potvrđena. Korisnik obaviješten."
+    flash("Rezervacije potvrđena. Korisnik obaviješten.", "success")
+    return redirect(url_for("admin"))
 
 
 @app.route("/admin/reject_email/<int:reservation_id>")
 def reject_email(reservation_id):
     reservation = Reservation.query.get_or_404(reservation_id)
-    if reservation.status != "rejected":
-        return "Rezervacija je već obrađena."
+    if reservation.status != "pending":
+        flash("Rezervacija je već obrađena!", "warning")
+        return redirect(url_for("admin"))
 
     reservation.status = "rejected"
     db.session.commit()
 
     send_user_notification(reservation, accepted=False)
-    return "Rezervacija je odbijena. Korisnik je obaviješten."
+    flash("Rezervacija je odbijena. Korisnik je obaviješten.", "danger")
+    return redirect(url_for("admin"))
 
 
 def send_user_notification(reservation, accepted=True):
