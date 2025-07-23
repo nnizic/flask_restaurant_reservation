@@ -80,6 +80,7 @@ def reserve(table_id):
 def admin():
     status_filter = request.args.get("status")
     date_filter = request.args.get("date")
+    page = request.args.get("page", 1, type=int)
 
     query = Reservation.query
 
@@ -94,7 +95,8 @@ def admin():
         except ValueError:
             flash("Neispravan format datuma", "danger")
 
-    reservations = query.order_by(Reservation.date.desc()).all()
+    # reservations = query.order_by(Reservation.date.desc()).all()
+    reservations_paginated = query.order_by(Reservation.date.desc()).paginate(page=page, per_page=10)
     tables = Table.query.order_by(Table.number).all()
 
     # Statistika
@@ -106,7 +108,7 @@ def admin():
 
     stats = {"total": total, "confirmed": confirmed, "pending": pending, "rejected": rejected, "today": today}
 
-    return render_template("admin.html", reservations=reservations, tables=tables, stats=stats)
+    return render_template("admin.html", reservations=reservations_paginated.items, pagination=reservations_paginated, tables=tables, stats=stats)
 
 
 @app.route("/admin/confirm/<int:reservation_id>", methods=["POST"])
