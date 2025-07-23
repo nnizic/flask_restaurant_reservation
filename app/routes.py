@@ -147,7 +147,7 @@ def add_table():
     return redirect(url_for("admin"))
 
 
-@app.route("/admin/delete_-table/<int:table_id>", methods=["POST"])
+@app.route("/admin/delete_table/<int:table_id>", methods=["POST"])
 def delete_table(table_id):
     table = Table.query.get_or_404(table_id)
     if table.reservations:

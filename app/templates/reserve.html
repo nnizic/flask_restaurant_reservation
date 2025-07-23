@@ -1,14 +1,15 @@
 {% extends "base.html" %} {% block title %}Rezervacija{% endblock %} {% block
 content %}
-<div class="container mt-5" style="max-width: 600px">
-  <h2 class="mb-4">Rezervacija stola</h2>
+<div class="container mt-4">
+  <h2>Rezervacija za stol #{{ table.number }}</h2>
   <form method="POST">
     <div class="mb-3">
       <label for="name" class="form-label">Ime i prezime</label>
       <input type="text" class="form-control" id="name" name="name" required />
     </div>
+
     <div class="mb-3">
-      <label for="email" class="form-label">E-mail adresa</label>
+      <label for="email" class="form-label">Email adresa</label>
       <input
         type="email"
         class="form-control"
@@ -17,6 +18,7 @@ content %}
         required
       />
     </div>
+
     <div class="mb-3">
       <label for="date" class="form-label">Datum i vrijeme</label>
       <input
@@ -27,15 +29,10 @@ content %}
         required
       />
     </div>
-    <div class="mb-3">
-      <label for="table" class="form-label">Odaberi stol</label>
-      <select class="form-select" id="table" name="table_id" required>
-        {% for table in tables %}
-        <option value="{{ table.id }}">Stol #{{ table.number }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <button type="submit" class="btn btn-success">Pošalji rezervaciju</button>
+
+    <button type="submit" class="btn btn-primary">
+      Rezerviraj stol #{{ table.number }}
+    </button>
   </form>
 </div>
 {% endblock %}

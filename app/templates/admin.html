@@ -18,8 +18,8 @@
 </div>
 
 <!-- Filter -->
-<form class="row g-3 mb-4" method="GET" action="{{ url_for('admin') }}">
-  <div class="col-md-3">
+<form class="row g-2 mb-4 align-items-end" method="GET" action="{{ url_for('admin') }}">
+  <div class="col-md-4">
     <select name="status" class="form-select">
       <option value="">-- Filter po statusu --</option>
       <option value="pending" {% if request.args.get('status') == 'pending' %}selected{% endif %}>Na čekanju</option>
@@ -27,11 +27,12 @@
       <option value="rejected" {% if request.args.get('status') == 'rejected' %}selected{% endif %}>Odbijene</option>
     </select>
   </div>
-  <div class="col-md-3">
+  <div class="col-md-4">
     <input type="date" name="date" value="{{ request.args.get('date', '') }}" class="form-control">
   </div>
-  <div class="col-md-3">
+  <div class="col-md-4 d-flex gap-2">
     <button class="btn btn-primary" type="submit">Primijeni filter</button>
+    <a href="{{ url_for('admin') }}" class="btn btn-secondary mt-4">Resetiraj filter</a>
   </div>
 </form>
 
@@ -68,8 +69,8 @@
       </td>
       <td>
         {% if res.status == 'pending' %}
-          <a href="{{ url_for('confirm_reservation', reservation_id=res.id) }}" class="btn btn-sm btn-success">✅</a>
-          <a href="{{ url_for('reject_reservation', reservation_id=res.id) }}" class="btn btn-sm btn-danger">❌</a>
+          <a href="{{ url_for('confirm_email', reservation_id=res.id) }}" class="btn btn-sm btn-success">✅</a>
+          <a href="{{ url_for('reject_email', reservation_id=res.id) }}" class="btn btn-sm btn-danger">❌</a>
         {% endif %}
         <a href="{{ url_for('delete_reservation', reservation_id=res.id) }}" class="btn btn-sm btn-outline-danger"
            onclick="return confirm('Sigurno želiš obrisati ovu rezervaciju?')">🗑</a>
@@ -88,6 +89,7 @@
     <tr>
       <th>ID</th>
       <th>Broj stola</th>
+      <th>Kapacitet stola</th>
       <th>Akcija</th>
     </tr>
   </thead>
@@ -96,6 +98,7 @@
     <tr>
       <td>{{ table.id }}</td>
       <td>#{{ table.number }}</td>
+      <td>{{ table.capacity }}</td>
       <td>
         <a href="{{ url_for('delete_table', table_id=table.id) }}" class="btn btn-sm btn-outline-danger"
            onclick="return confirm('Obrisati stol? Ako ima rezervacije, to neće biti moguće.')">🗑</a>
@@ -106,12 +109,15 @@
 </table>
 
 <!-- Dodaj stol -->
-<form class="row g-3 mt-3" method="POST" action="{{ url_for('add_table') }}">
+<form class="row g-3 mt-3 align-items-end" method="POST" action="{{ url_for('add_table') }}">
   <div class="col-auto">
     <input type="number" name="number" class="form-control" placeholder="Broj stola" required>
   </div>
   <div class="col-auto">
-    <button type="submit" class="btn btn-primary mb-3">Dodaj stol</button>
+    <input type="number" name="capacity" class="form-control" placeholder="Kapacitet  stola" required>
+  </div>
+  <div class="col-auto">
+    <button type="submit" class="btn btn-primary mt-4">Dodaj stol</button>
   </div>
 </form>
 

@@ -1,10 +1,23 @@
 {% extends "base.html" %} {% block title %}Početna{% endblock %} {% block
 content %}
-<div class="text-center mt-5">
-  <h1>Dobrodošli u naš restoran</h1>
-  <p class="lead">Brza i jednostavna online rezervacija stola</p>
-  <a href="{{ url_for('reserve') }}" class="btn btn-primary mt-3"
-    >Rezerviraj stol</a
-  >
+<div class="container mt-4">
+  <h2>Dostupni stolovi</h2>
+  <div class="row">
+    {% for table in tables %}
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Stol #{{ table.number }}</h5>
+          <p class="card-text">Broj mjesta: {{ table.seats }}</p>
+          <a
+            href="{{ url_for('reserve', table_id=table.id) }}"
+            class="btn btn-success"
+            >Rezerviraj</a
+          >
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}
