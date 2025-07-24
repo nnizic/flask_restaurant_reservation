@@ -6,19 +6,21 @@ Jednostavni web sustav za rezervaciju stolova u restoranu, izrađen pomoću **Fl
 
 ## ✅ Funkcionalnosti
 
-- Prikaz dostupnih stolova
+- Prikaz dostupnih stolova i rezervacija po datumu
 - Rezervacija stola na određeni datum i vrijeme
 - Validacija dvostrukih rezervacija
-- Admin sučelje s:
-  - pregledom i filtriranjem rezervacija (po statusu i datumu)
-  - potvrdom i odbijanjem rezervacija (i preko emaila)
-  - statistikama (ukupno, danas, potvrđene, na čekanju, odbijene)
-  - upravljanjem stolovima (dodavanje i brisanje)
-- Email obavijesti:
-  - Admin prima mail s botunima za potvrdu/odbijanje rezervacije
-  - Korisnik prima mail s informacijom o statusu rezervacije (potvrđeno/odbijeno)
-- Admin autentikacija (login/logout)
-- Bootstrap dizajn za sve stranice
+- Potvrda i odbijanje rezervacija od strane admina:
+  - putem admin panela ili
+  - direktno iz e-mail poruke
+- Slanje email potvrda korisniku (potvrda / odbijanje)
+- Admin dashboard s:
+  - pregledom i filtriranjem rezervacija po datumu i statusu
+  - osnovnim statistikama (danas, potvrđeno, na čekanju itd.)
+  - dodavanjem i brisanjem stolova (nije moguće brisanje stola s rezervacijom)
+- Admin login sustav (autentifikacija)
+- Flash poruke s automatskim nestajanjem
+- Bootstrap dizajn + spinner pri slanju rezervacije
+- .env konfiguracija za sigurnost osjetljivih podataka
 
 ---
 
@@ -27,20 +29,24 @@ Jednostavni web sustav za rezervaciju stolova u restoranu, izrađen pomoću **Fl
 ```
 restaurant-reservation/
 ├── app/
-│ ├── init.py # Inicijalizacija aplikacije i baze
-│ ├── models.py # SQLAlchemy modeli za stolove, rezervacije i admina
-│ ├── routes.py # Flask rute (view funkcije)
-│ ├── email_utils.py # Slanje emailova adminu i korisnicima
+│ ├── init.py # Inicijalizacija aplikacije, baza, mail, login
+│ ├── models.py # SQLAlchemy modeli (Admin, Table, Reservation)
+│ ├── routes.py # Flask rute (korisnik i admin)
 │ └── templates/ # HTML predlošci
-│ ├── base.html
-│ ├── index.html
-│ ├── reserve.html
-│ ├── admin.html
-│ └── login.html
+│ ├── base.html # Layout s Bootstrapom i flash porukama
+│ ├── index.html # Početna stranica - stolovi
+│ ├── reserve.html # Forma za rezervaciju
+│ ├── admin.html # Admin panel s filtrima i statistikama
+│ └── email/ # HTML poruke za admina i korisnika
+│ ├── notify_admin.html
+│ ├── user_confirmed.html
+│ └── user_rejected.html
 ├── static/ # (opcionalno) CSS/JS datoteke
-├── config.py # Konfiguracija aplikacije (baza, ključ itd.)
+├── config.py # Konfiguracija aplikacije (.env podrška)
 ├── run.py # Pokretanje aplikacije
 ├── requirements.txt # Python ovisnosti
+├── .env # Tajne varijable (lokalno)
+├── .gitignore # Ignorirane datoteke
 └── README.md # Dokumentacija projekta
 ```
 
@@ -52,20 +58,22 @@ restaurant-reservation/
 
    ```bash
    pip install -r requirements.txt
+
    ```
 
-   Konfiguriraj config.py:
+   Konfiguriraj .env datoteku:
 
 ```
-
-SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://user:lozinka@localhost/restaurant'
-SECRET_KEY = 'tvoj_tajni_kljuc'
-MAIL_SERVER = 'smtp.gmail.com'
-MAIL_PORT = 587
-MAIL_USE_TLS = True
-MAIL_USERNAME = 'tvoj.email@gmail.com'
-MAIL_PASSWORD = 'tvoja_app_lozinka'
-
+FLASK_APP=run.py
+FLASK_ENV=development
+SECRET_KEY=your-secret-key
+SQLALCHEMY_DATABASE_URI=mysql+pymysql://user:password@localhost/restaurant
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_DEFAULT_SENDER=admin@example.com
 ```
 
 Kreiraj bazu u MySQL-u:
@@ -73,63 +81,78 @@ Kreiraj bazu u MySQL-u:
 ```
 CREATE DATABASE restaurant;
 
-Inicijaliziraj migraciju baze (ako koristiš Flask-Migrate):
+```
 
+Inicijaliziraj bazu i migracije:
+
+```
 flask db init
-flask db migrate
+flask db migrate -m "init"
 flask db upgrade
+
 ```
 
 Pokreni aplikaciju:
 
 ```
-python run.py
+flask run
+
 ```
 
 Otvori u pregledniku:
 
-http://127.0.0.1:5000/
+    http://127.0.0.1:5000/
 
-🔐 Admin prijava
+🔐 Admin login
 
-Dodaj ručno admin korisnika u bazu (ili kroz skriptu):
+Prvi admin unosi se direktno iz baze. Primjer SQL unosa:
 
 ```
-from app import db
-from app.models import AdminUser
-admin = AdminUser(username='admin', password_hash=generate_password_hash('lozinka'))
-db.session.add(admin)
-db.session.commit()
+INSERT INTO admin (username, password_hash) VALUES (
+'admin',
+'<hash lozinke>'
+);
+
 ```
+
+Hash možeš generirati u Python konzoli:
+
+```
+from werkzeug.security import generate_password_hash
+generate_password_hash("tvoja_lozinka")
+
+```
+
+🧪 Napomena
+
+    Flash poruke se automatski gase nakon 5 sekundi.
+
+    Spinner se prikazuje tijekom slanja rezervacije.
+
+    Admin dobiva poruku mailom sa "Potvrdi" i "Odbij" gumbima.
+
+    Korisnik dobiva potvrdu mailom nakon adminove akcije.
+
+    Deployment moguć na server s WSGI podrškom (Passenger, Apache, Nginx+Gunicorn, itd.)
 
 📌 Ovisnosti
 
-Flask
+    Flask
 
-Flask-SQLAlchemy
+    Flask-SQLAlchemy
 
-Flask-Migrate
+    Flask-Migrate
 
-Flask-Mail
+    Flask-Mail
 
-Flask-Login
+    Flask-Login
 
-PyMySQL
+    python-dotenv
 
-Bootstrap 5 (CDN)
+    PyMySQL
 
-🧪 Primjedbe
-
-Za slanje emailova s Gmailom koristi se "App Password" ako je uključena 2FA.
-
-Aplikacija trenutno koristi osnovnu zaštitu – za produkciju preporučujemo .env, SSL i CSRF zaštitu.
-
-Razgraničeni pristup korisnika i admina može se dodatno proširiti (npr. korisnički paneli).
+    Bootstrap (via CDN)
 
 📬 Kontakt
 
-Za pitanja, prijedloge ili proširenja slobodno se javi! 🙂
-
-```
-
-```
+Za komentare, ideje i proširenja slobodno se javi! 🙂
