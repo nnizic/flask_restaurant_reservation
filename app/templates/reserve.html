@@ -2,7 +2,7 @@
 content %}
 <div class="container mt-4">
   <h2>Rezervacija za stol #{{ table.number }}</h2>
-  <form method="POST">
+  <form method="POST" id="reservationForm">
     <div class="mb-3">
       <label for="name" class="form-label">Ime i prezime</label>
       <input type="text" class="form-control" id="name" name="name" required />
@@ -30,9 +30,37 @@ content %}
       />
     </div>
 
-    <button type="submit" class="btn btn-primary">
+    <button type="submit" id="submitBtn" class="btn btn-primary">
+      <span
+        id="spinner"
+        class="spinner-border spinner-border-sm me-2 d-none"
+        role="status"
+        aria-hidden="true"
+      ></span>
       Rezerviraj stol #{{ table.number }}
     </button>
   </form>
+
+  <script>
+    document
+      .getElementById("reservationForm")
+      .addEventListener("submit", function (event) {
+        const btn = document.getElementById("submitBtn");
+        const spinner = document.getElementById("spinner");
+
+        if (btn && spinner) {
+          spinner.classList.remove("d-none");
+          btn.disabled = true;
+        }
+
+        // kratak delay pa onda pošalji formu
+        setTimeout(() => {
+          this.submit();
+        }, 50);
+
+        // spriječi originalni submit dok se ne pokrene ponovno
+        event.preventDefault();
+      });
+  </script>
 </div>
 {% endblock %}
