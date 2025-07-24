@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Flask instance folder (ako postoji)
+instance/
+
+# Environment variables
+.env
+.env.*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# SQLite (ako se koristi za testiranje)
+*.sqlite3
+*.db
+
+# PyCharm / VSCode / editor config
+.vscode/
+.idea/
+
+# Test cache and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.pipenv/
+*.egg-info/
+dist/
+build/
+
+# Migrations (optional - ako koristiš flask db init svaki put svježe)
+# migrations/
+
+# Compiled HTML docs
+docs/_build/
+
+# Logs
+*.log
+
+# Static build
+/static/*.compiled.*
+
+# Passenger / deployment artifacts
+.passenger/
+
+# Node (ako koristiš Bootstrap JS preko npm)
+node_modules/
+package-lock.json
+npm-debug.log
+
+# Cache files
+*.cache
+
